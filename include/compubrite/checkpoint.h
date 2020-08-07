@@ -45,7 +45,7 @@ public:
     template <typename ...Args>
     static void hit(const Here& here, const Args& ...args)
     {
-        if (!init) {
+        if (!init_) {
             init();
         }
         if (disabled_) {
