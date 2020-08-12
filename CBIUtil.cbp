@@ -70,8 +70,8 @@
 		<Linker>
 			<Add library="libstdc++fs.a" />
 		</Linker>
-		<Unit filename="include/compubrite/checkpoint.h" />
-		<Unit filename="src/compubrite/checkpoint.cpp">
+		<Unit filename="include/CompuBrite/CheckPoint.h" />
+		<Unit filename="src/CompuBrite/CheckPoint.cpp">
 			<Option target="Debug" />
 			<Option target="test-Debug" />
 		</Unit>

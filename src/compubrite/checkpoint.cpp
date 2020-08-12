@@ -21,7 +21,7 @@
  * SOFTWARE.
 */
 
-#include "compubrite/checkpoint.h"
+#include "CompuBrite/CheckPoint.h"
 
 #include <algorithm>
 

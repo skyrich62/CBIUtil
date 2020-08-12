@@ -23,7 +23,7 @@
  * @brief Example use of CheckPoint objects.
 */
 
-#include "compubrite/checkpoint.h"
+#include "CompuBrite/CheckPoint.h"
 
 namespace cbi = CompuBrite;
 
