@@ -191,7 +191,7 @@ public:
     template <typename Cond, typename ...Args>
     static Cond expect(const Here& here, Cond &&cond, const Args& ...args)
     {
-        if (!init) {
+        if (!init_) {
             init();
         }
         if (!disabled_ && !static_cast<bool>(cond)) {
@@ -251,7 +251,7 @@ public:
     /// developer can attach to the running program with a debugger, set some
     /// breakpoints, examine memory, then finally set "hang" to false and
     /// resume execution.  In release mode, (where the CBI_CHECKPOINT macro
-    /// is not defined), active() return false; the compiler will optimze
+    /// is not defined), active() return false; the compiler will optimize
     /// the entire if statement away, cleanly.
     bool active() const                { return active_; }
 

@@ -23,7 +23,16 @@
  * @brief Example use of CheckPoint objects.
 */
 
-#include "CompuBrite/CheckPoint.h"
+#include "compubrite/CheckPoint.h"
+#include "compubrite/ThreadPool.h"
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+#include <unistd.h>
+#include <future>
+#include <exception>
+#include <numeric>
 
 namespace cbi = CompuBrite;
 
@@ -63,11 +72,56 @@ int main()
 
     // Demonstrate an inline expectation.  "hello" is not null, so this
     // doesn't fire, but since "hello" is the condition which is perfectly
-    // forwareded as the return value, the variable "p" gets set to "hello"
+    // forwarded as the return value, the variable "p" gets set to "hello"
     p = cbi::CheckPoint::expect(CBI_HERE, "hello", "Never Fires");
     std::cout << "p = " << p << std::endl;
 
     // Create a temporary CheckPoint and print it if it's enabled.
     cbi::CheckPoint("test3").print(CBI_HERE, "test3\n");
+
+    cbi::ThreadPool pool;
+    pool.activate(6);
+    const auto sleepDuration = 4u;
+    for (auto i = sleepDuration * 2u; i > 0; --i) {
+        pool << [i]()
+        {
+            sleep(1);
+            std::ostringstream os;
+            os << "I'm task " << std::setw(2) << i << ", Thread: " << std::hex
+               << std::this_thread::get_id() << std::endl;
+            std::cout << os.str();
+        };
+    }
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    auto work = [first = v.begin(), last = v.end()] () -> int
+    {
+        std::ostringstream os;
+        os << "I'm the accum task, Thread: " << std::hex
+           << std::this_thread::get_id() << std::endl;
+        std::cout << os.str();
+        sleep(5);
+        auto r = std::accumulate(first, last, 0);
+        cbi::CheckPoint::hit(CBI_HERE, "r = ", r);
+        return r;
+    };
+    auto promise = pool.addTask<int>(work);
+    sleep(1);
+    auto future = promise.get_future();
+    for (auto i = sleepDuration; i > 0; --i) {
+        std::cout << i << std::endl;
+        std::chrono::milliseconds span(1000);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            continue;
+        }
+        try {
+            auto res = future.get();
+            std::cout << "result = " << res << std::endl;
+        } catch (const std::exception &e) {
+            std::cout << e.what() << std::endl;
+        }
+    }
+    sleep(3);
+    pool.shutdown();
+    pool.wait();
     return 0;
 }
