@@ -1,3 +1,28 @@
+/**
+ * The MIT License (MIT)
+ *
+ * @copyright
+ * Copyright (c) 2020 Rich Newman
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ * @file
+ * @brief Implementation for the ThreadPool
+*/
+
 #include "CompuBrite/ThreadPool.h"
 
 namespace CompuBrite {
@@ -12,7 +37,7 @@ ThreadPool&
 ThreadPool::shutdown()
 {
     _active = false;
-    _cv.notify_all();
+    _ready.notify_all();
     return *this;
 }
 
@@ -20,7 +45,7 @@ ThreadPool&
 ThreadPool::wait()
 {
     for (auto &thread : _threads) {
-        _cv.notify_all();
+        _ready.notify_all();
         if (thread.joinable()) {
             thread.join();
         }
@@ -31,11 +56,11 @@ ThreadPool::wait()
 ThreadPool&
 ThreadPool::activate(size_t nThreads)
 {
+    _active = true;
     auto lock = this->lock();
     for (size_t n = 0u; n < nThreads; ++n) {
         _threads.emplace_back(std::thread([this] {svc(); }));
     }
-    _active = true;
     return *this;
 }
 
@@ -44,15 +69,14 @@ ThreadPool::svc()
 {
     while (true) {
         auto lock = this->lock();
-        _cv.wait(lock, [this] () { return !(_active && _tasks.empty()); });
+        _ready.wait(lock, [this] () { return !(_active && _tasks.empty()); });
         if (!_active) {
             return;
         }
         if (_tasks.empty()) {
             continue;
         }
-        auto task = _tasks.front();
-        _tasks.pop_front();
+        auto task = _tasks.pop();
         lock.unlock();
         if (task) {
             task();
@@ -64,8 +88,8 @@ ThreadPool&
 ThreadPool::addTask(Task &&task)
 {
     auto lock = this->lock();
-    _tasks.emplace_back(std::move(task));
-    _cv.notify_all();
+    _tasks.addTask(std::move(task));
+    _ready.notify_all();
     return *this;
 }
 

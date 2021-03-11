@@ -1,3 +1,28 @@
+/**
+ * The MIT License (MIT)
+ *
+ * @copyright
+ * Copyright (c) 2020 Rich Newman
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ * @file
+ * @brief Interface for the ThreadPool
+*/
+
 #ifndef COMPUBRITE_THREADPOOL_H
 #define COMPUBRITE_THREADPOOL_H
 
@@ -7,6 +32,8 @@
 #include <list>
 #include <functional>
 #include <future>
+
+#include <CompuBrite/TaskQueue.h>
 
 namespace CompuBrite {
 
@@ -19,6 +46,10 @@ namespace CompuBrite {
 class ThreadPool
 {
 public:
+    using Task = TaskQueue::Task;
+    using Mutex = std::mutex;
+    using Lock = std::unique_lock<Mutex>;
+
     /**
      * Construct a ThreadPool object and initialize it.
      */
@@ -41,28 +72,6 @@ public:
 
     /// ThreadPool objects can be moved.
     ThreadPool& operator=(ThreadPool&&) = default;
-
-    /// @name Internal type aliases
-    /// @{
-
-    /**
-     * A Task is a discrete unit of work to perform, a single function
-     * taking no arguments, and returning no value.
-     * Arguments should be supplied via lambda captures.
-     * @see addTask()
-     */
-    using Task = std::function<void()>;
-
-    /**
-     * Helps to make the code more orthogonal.
-     */
-    using Mutex = std::mutex;
-
-    /**
-     * Parameterize the locking mechanism over the task queue.
-     */
-    using Lock = std::unique_lock<Mutex>;
-    /// @}
 
     /**
      * Activate the pool by creating nThreads new threads to run in it.
@@ -92,18 +101,7 @@ public:
     template <typename Ret>
     std::promise<Ret> addTask(std::function<Ret ()> work)
     {
-        std::promise<Ret> promise;
-        auto task = [work, &promise] ()
-        {
-            try {
-                auto r = work();
-                promise.set_value(r);
-            } catch (...) {
-                promise.set_exception(std::current_exception());
-            }
-        };
-        addTask(std::move(task));
-        return promise;
+          return _tasks.addTask<Ret>(work);
     }
 
     /**
@@ -128,7 +126,7 @@ public:
     size_t threads() const             { auto l = lock(); return _threads.size(); }
 
     /// @return the number of tasks in the ThreadPool
-    size_t tasks() const               { auto l = lock(); return _tasks.size(); }
+    size_t tasks() const               { return _tasks.size(); }
 private:
 
     /**
@@ -148,14 +146,12 @@ private:
 
 private:
     using Threads = std::list<std::thread>;
-    using Tasks = std::list<Task>;
-    using CondVar = std::condition_variable;
 
-    Threads             _threads;
-    Tasks               _tasks;
-    mutable Mutex       _mutex;
-    mutable CondVar     _cv;
-    std::atomic<bool>   _active{false};
+    Threads                  _threads;
+    TaskQueue                _tasks;
+    mutable Mutex            _mutex;
+    std::condition_variable  _ready;
+    std::atomic<bool>        _active{false};
 };
 
 /**

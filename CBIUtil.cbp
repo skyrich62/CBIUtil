@@ -26,6 +26,7 @@
 					<Add option="-std=c++17" />
 					<Add option="-g" />
 					<Add option="-DCBI_CHECKPOINTS=1" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add library="user32" />
@@ -41,6 +42,7 @@
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-O2" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add library="user32" />
@@ -53,6 +55,7 @@
 				<Option compiler="mingw_gcc-73_64-bit" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add directory="include" />
 				</Compiler>
 			</Target>
 			<Target title="test-Debug">
@@ -61,8 +64,11 @@
 				<Option type="1" />
 				<Option compiler="mingw_gcc-73_64-bit" />
 				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-std=c++17" />
 					<Add option="-g" />
 					<Add option="-DCBI_CHECKPOINTS=1" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add library="bin/Debug/libCBIUtil.a" />
@@ -79,11 +85,15 @@
 			<Add library="stdc++fs" />
 		</Linker>
 		<Unit filename="include/CompuBrite/CheckPoint.h" />
+		<Unit filename="include/CompuBrite/TaskQueue.h" />
+		<Unit filename="include/CompuBrite/ThreadPool.h" />
 		<Unit filename="include/CompuBrite/hash_util.h" />
 		<Unit filename="src/CompuBrite/CheckPoint.cpp">
 			<Option target="Debug" />
 			<Option target="test-Debug" />
 		</Unit>
+		<Unit filename="src/CompuBrite/TaskQueue.cpp" />
+		<Unit filename="src/CompuBrite/ThreadPool.cpp" />
 		<Unit filename="src/test.cpp">
 			<Option target="test-Release" />
 			<Option target="test-Debug" />

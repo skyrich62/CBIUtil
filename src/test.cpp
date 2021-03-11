@@ -92,6 +92,7 @@ int main()
             std::cout << os.str();
         };
     }
+
     std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     auto work = [first = v.begin(), last = v.end()] () -> int
     {
