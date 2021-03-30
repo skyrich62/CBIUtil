@@ -75,7 +75,7 @@ ThreadPool::svc()
             continue;
         }
 
-        auto task = std::move(_queue.take());
+        auto task = _queue.take();
         if (task) {
             l.unlock();
             task();
