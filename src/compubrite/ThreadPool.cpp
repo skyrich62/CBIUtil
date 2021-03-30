@@ -19,86 +19,75 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  * @file
- * @brief Implementation for the ThreadPool
+ * @brief Implementation for ThreadPool
 */
 
 #include "CompuBrite/ThreadPool.h"
 
-namespace CompuBrite {
+namespace CompuBrite
+{
 
 ThreadPool::~ThreadPool()
 {
     shutdown();
-    wait();
+    for (auto &ptr : _pool) {
+        ptr->join();
+    }
 }
 
-ThreadPool&
+void
 ThreadPool::shutdown()
 {
-    _active = false;
-    _ready.notify_all();
-    return *this;
+    auto l = lock();
+    _shutdown = true;
+    _empty.notify_all();
 }
 
-ThreadPool&
-ThreadPool::wait()
+void
+ThreadPool::activate(std::size_t n)
 {
-    for (auto &thread : _threads) {
-        _ready.notify_all();
-        if (thread.joinable()) {
-            thread.join();
-        }
+    auto l = lock();
+    for (auto i = 0u; i < n; ++i) {
+        _pool.emplace_back(new std::thread([this]() { svc(); } ));
     }
-    return *this;
 }
 
-ThreadPool&
-ThreadPool::activate(size_t nThreads)
+void
+ThreadPool::addTask(Task task)
 {
-    _active = true;
-    auto lock = this->lock();
-    for (size_t n = 0u; n < nThreads; ++n) {
-        _threads.emplace_back(std::thread([this] {svc(); }));
-    }
-    return *this;
+    auto l = lock();
+    _queue.add(task);
+    _empty.notify_all();
 }
 
 void
 ThreadPool::svc()
 {
     while (true) {
-        auto lock = this->lock();
-        _ready.wait(lock, [this] () { return !(_active && _tasks.empty()); });
-        if (!_active) {
+        auto l = lock();
+        _empty.wait(l, [this]() { return !_queue.empty() || _shutdown; });
+        if (_shutdown) {
             return;
         }
-        if (_tasks.empty()) {
+        if (_queue.empty()) {
             continue;
         }
-        auto task = _tasks.pop();
-        lock.unlock();
+
+        auto task = std::move(_queue.take());
         if (task) {
+            l.unlock();
             task();
         }
     }
 }
 
 ThreadPool&
-ThreadPool::addTask(Task &&task)
+operator<<(ThreadPool &pool, ThreadPool::Task task)
 {
-    auto lock = this->lock();
-    _tasks.addTask(std::move(task));
-    _ready.notify_all();
-    return *this;
-}
-
-ThreadPool&
-operator<< (ThreadPool &pool, ThreadPool::Task &&task)
-{
-    return pool.addTask(std::move(task));
+    pool.addTask(task);
+    return pool;
 }
 
 } // namespace CompuBrite
-
-// EOF

@@ -19,35 +19,37 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  * @file
- * @brief Implementation for the TaskQueue
- */
- #include "CompuBrite/TaskQueue.h"
+ * @brief Implementation for TaskQueue
+*/
+
+#include "CompuBrite/TaskQueue.h"
 
 namespace CompuBrite {
 
-TaskQueue&
-TaskQueue::addTask(Task &&task)
+void
+TaskQueue::add(TaskQueue::Task task)
 {
-    _tasks.emplace_back(std::move(task));
-    return *this;
+    _queue.emplace_back(task);
 }
 
 TaskQueue::Task
-TaskQueue::pop()
+TaskQueue::take()
 {
-    Task task;
-    if (!_tasks.empty()) {
-        task = _tasks.front();
-        _tasks.pop_front();
+    if (_queue.empty()) {
+        return Task();
     }
-    return task;
+    auto ret = _queue.back();
+    _queue.pop_back();
+    return ret;
 }
 
 TaskQueue&
-operator<<(TaskQueue &queue, TaskQueue::Task &&task)
+operator<<(TaskQueue &queue, TaskQueue::Task task)
 {
-    return queue.addTask(std::move(task));
+    queue.add(task);
+    return queue;
 }
 
 } // namespace CompuBrite

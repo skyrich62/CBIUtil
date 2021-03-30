@@ -19,99 +19,55 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  * @file
- * @brief Interface for the TaskQueue
- */
+ * @brief Interface for TaskQueue
+*/
 
+#ifndef COMPUBRITE_SFML_TASKQUEUE_H
+#define COMPUBRITE_SFML_TASKQUEUE_H
 
-#ifndef COMPUBRITE_TASKQUEUE_H
-#define COMPUBRITE_TASKQUEUE_H
-
+#include <functional>
 #include <list>
 #include <mutex>
 #include <condition_variable>
-#include <functional>
-#include <future>
 
 namespace CompuBrite
 {
 
 /**
- * Manage a queue of tasks.
+ * TaskQueue holds a list of std::function, (Task), objects and allows clients
+ * to add new tasks to the back of the queue, and take tasks from the front.
  */
 class TaskQueue
 {
 public:
-    /**
-     * A Task is a discrete unit of work to perform, a single function
-     * taking no arguments, and returning no value.
-     * Arguments should be supplied via lambda captures.
-     * @see addTask()
-     */
-    using Task = std::function<void()>;
+    using Task = std::function<void(void)>;
+    using Queue = std::list<Task>;
 
     TaskQueue() = default;
-    virtual ~TaskQueue() = default;
+    ~TaskQueue() = default;
 
-    TaskQueue(const TaskQueue &) = delete;
-    TaskQueue(TaskQueue &&) = default;
+    TaskQueue(const TaskQueue&) = delete;
+    TaskQueue& operator=(const TaskQueue&) = delete;
 
-    TaskQueue& operator=(const TaskQueue&&) = delete;
-    TaskQueue& operator=(TaskQueue&&) = default;
+    /// Add a new task to the queue.
+    void add(Task task);
 
-   /**
-     * Add a task to the work queue.
-     * @param task The task to add to the queue.
-     */
-    TaskQueue& addTask(Task &&task);
+    /// Take a task from the queue, if possible.
+    /// @return an empty std::function if no task is available, otherwise
+    /// the task at the back of the queue.
+    Task take();
 
-    /**
-     * Add a task to the work queue which might return a value, (or throw
-     * an exception).
-     * @overload
-     * @tparam Ret The return type for the task.
-     * @param work The function to run, which will be wrapped in a Task.
-     * @return A std::promise<Ret> which can be used to retrieve the
-     * return value or exception if any.
-     */
-    template <typename Ret>
-    std::promise<Ret> addTask(std::function<Ret ()> work)
-    {
-        std::promise<Ret> promise;
-        auto task = [work, &promise] ()
-        {
-            try {
-                auto r = work();
-                promise.set_value(r);
-            } catch (...) {
-                promise.set_exception(std::current_exception());
-            }
-        };
-        addTask(std::move(task));
-        return promise;
-    }
-
-    /**
-     * If the TaskQueue is non-empty, then pop the first task off and return it.
-     * Otherwise, just return a null Task.
-     */
-    Task pop();
-
-    /// @return true if the queue is empty.
-    bool empty() const            { return _tasks.empty(); }
-
-    /// @return the number of tasks on the queue.
-    auto size() const             { return _tasks.size(); }
+    /// @return true if the TaskQueue is empty.
+    bool empty()                  { return _queue.empty(); }
 
 private:
-    using Tasks = std::list<Task>;
-    Tasks                           _tasks;
+    Queue                   _queue;
 };
 
-/// A convenience operator to add tasks to the queue.
 TaskQueue&
-operator<<(TaskQueue &queue, TaskQueue::Task &&task);
+operator<<(TaskQueue &queue, TaskQueue::Task task);
 
 } // namespace CompuBrite
-
-#endif // COMPUBRITE_TASKQUEUE_H
+#endif // COMPUBRITE_SFML_TASKQUEUE_H
