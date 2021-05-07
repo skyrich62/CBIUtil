@@ -255,9 +255,21 @@ public:
     /// the entire if statement away, cleanly.
     bool active() const                { return active_; }
 
+
+    /// Programatically enable a specific category.  Usually this would
+    /// be called from a debugger.  Does nothing if the category is already]
+    /// eanbled.
+    /// @param category The category to enable.
+    static void enable(const std::string &category);
+
+    /// Programatically disabled a specific category.  Usually this would
+    /// be called from a debugger. Does nothing if the category is already
+    /// disabled.
+    /// @param category The category to disable.
+    static void disable(const char *category);
 private:
     static void init();
-    static bool active(const std::string &category);
+    static bool active(const char *category);
 
     template <typename ...Args>
     static void out(const Here &here, std::ostream& out, const std::string &reason, const Args& ...args)
@@ -316,6 +328,14 @@ public:
     static Cond expect(const Here& here, Cond &&cond, const Args& ...args)
     {
         return std::forward<Cond>(cond);
+    }
+
+    static void enable(const char *)
+    {
+    }
+
+    static void disable(const char *)
+    {
     }
 };
 #endif // CBI_CHECKPOINTS

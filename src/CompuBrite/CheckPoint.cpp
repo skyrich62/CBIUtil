@@ -55,6 +55,27 @@ bool CheckPoint::active(const std::string &category)
 }
 
 void
+CheckPoint::enable(const char *category)
+{
+    if (!category || active(category)) {
+        return;
+    }
+    categories_emplace_back(category);
+}
+
+void
+CheckPoint::disable(const char *category)
+{
+    if (!category) {
+        return;
+    }
+    std::erase(
+        std::remove(categories_.begin(), categories_.end(), category),
+        categories_.end()
+    );
+}
+
+void
 CheckPoint::init()
 {
     if (init_) {
