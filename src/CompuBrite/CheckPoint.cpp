@@ -31,7 +31,7 @@ namespace CompuBrite {
 bool CheckPoint::init_{false};
 bool CheckPoint::all_{false};
 bool CheckPoint::disabled_{false};
-std::vector<std::string> CheckPoint::categories_;
+std::set<std::string> CheckPoint::categories_;
 std::function<void()> CheckPoint::trap_ = [] {};
 
 CheckPoint::CheckPoint(std::string &&category, std::ostream& out) :
@@ -39,28 +39,28 @@ CheckPoint::CheckPoint(std::string &&category, std::ostream& out) :
     out_(out)
 
 {
+    if (!init_) {
+        init();
+    }
     active_ = active(category_);
 }
 
-bool CheckPoint::active(const std::string &category)
+bool
+CheckPoint::active(const std::string &category)
 {
     if (!init_) {
         init();
     }
-    if (all_) {
-        return true;
-    }
-    auto found = std::find(categories_.begin(), categories_.end(), category);
-    return found != categories_.end();
+    return categories_.find(category) != categories_.end();
 }
 
 void
 CheckPoint::enable(const char *category)
 {
-    if (!category || active(category)) {
+    if (!category) {
         return;
     }
-    categories_emplace_back(category);
+    categories_.emplace(category);
 }
 
 void
@@ -69,10 +69,11 @@ CheckPoint::disable(const char *category)
     if (!category) {
         return;
     }
-    std::erase(
-        std::remove(categories_.begin(), categories_.end(), category),
-        categories_.end()
-    );
+    auto found = categories_.find(category);
+    if (found == categories_.end()) {
+        return;
+    }
+    categories_.erase(found);
 }
 
 void
@@ -110,7 +111,7 @@ CheckPoint::init()
                         abort();
                     };
             } else {
-                categories_.emplace_back(std::move(cat));
+                categories_.emplace(std::move(cat));
             }
             if (end != ckpts.end()) {
                 begin = ++end;
@@ -126,7 +127,7 @@ void CheckPoint::trap(const Here& here)
 
 std::ostream& operator<<(std::ostream& os, const Here &here)
 {
-    return os << here.file_.filename().string().c_str() << ':' << here.line_ << " (" << here.func_ << ')';
+    return os << here.file_ << ':' << here.line_ << " (" << here.func_ << ')';
 }
 #endif // CBI_CHECKPOINTS
 

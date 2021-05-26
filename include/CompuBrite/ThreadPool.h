@@ -84,6 +84,8 @@ public:
     /// All running threads will finish their tasks and then terminate.
     void shutdown();
 
+    /// Wait for all threads to finish
+    void wait();
 private:
     using ThreadPtr = std::unique_ptr<std::thread>;
     using Pool      = std::list<ThreadPtr>;

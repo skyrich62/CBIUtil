@@ -32,8 +32,16 @@ namespace CompuBrite
 ThreadPool::~ThreadPool()
 {
     shutdown();
+    wait();
+}
+
+void
+ThreadPool::wait()
+{
     for (auto &ptr : _pool) {
-        ptr->join();
+        if (ptr->joinable()) {
+            ptr->join();
+        }
     }
 }
 

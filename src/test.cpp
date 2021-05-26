@@ -23,8 +23,8 @@
  * @brief Example use of CheckPoint objects.
 */
 
-#include "compubrite/CheckPoint.h"
-#include "compubrite/ThreadPool.h"
+#include "CompuBrite/CheckPoint.h"
+#include "CompuBrite/ThreadPool.h"
 
 #include <iomanip>
 #include <iostream>
@@ -47,6 +47,8 @@ int main()
     bool foo = false;
 
     // Expect "foo" to be true, print out an exception message if not.
+    // It doesn't matter if point1 is disabled, because expect doesn't
+    // require an active CheckPoint object.
     point1.expect(CBI_HERE, foo, "test1 failed expect\n");
 
     // Create debugging CheckPoint "test2"

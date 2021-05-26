@@ -27,12 +27,11 @@
 #ifndef COMPUBRITE_CHECKPOINT_H
 #define COMPUBRITE_CHECKPOINT_H
 
-#include <vector>
+#include <set>
 #include <string>
 #include <ostream>
 #include <iostream>
 #include <functional>
-#include <experimental/filesystem>
 
 namespace CompuBrite {
 
@@ -63,9 +62,9 @@ public:
     { }
     ~Here() = default;
 private:
-    unsigned int line_;
-    std::experimental::filesystem::path file_;
-    const char * func_;
+    const unsigned int line_;
+    const char * const file_;
+    const char * const func_;
 };
 
 /// @brief Checkpoints are used to print out debugging or exception
@@ -253,14 +252,14 @@ public:
     /// resume execution.  In release mode, (where the CBI_CHECKPOINT macro
     /// is not defined), active() return false; the compiler will optimize
     /// the entire if statement away, cleanly.
-    bool active() const                { return active_; }
+    bool active() const                { return active_ && !disabled_; }
 
 
     /// Programatically enable a specific category.  Usually this would
-    /// be called from a debugger.  Does nothing if the category is already]
+    /// be called from a debugger.  Does nothing if the category is already
     /// eanbled.
     /// @param category The category to enable.
-    static void enable(const std::string &category);
+    static void enable(const char *category);
 
     /// Programatically disabled a specific category.  Usually this would
     /// be called from a debugger. Does nothing if the category is already
@@ -269,7 +268,7 @@ public:
     static void disable(const char *category);
 private:
     static void init();
-    static bool active(const char *category);
+    static bool active(const std::string &category);
 
     template <typename ...Args>
     static void out(const Here &here, std::ostream& out, const std::string &reason, const Args& ...args)
@@ -289,7 +288,7 @@ private:
     static bool init_;
     static bool all_;
     static bool disabled_;
-    static std::vector<std::string> categories_;
+    static std::set<std::string> categories_;
     static std::function<void()> trap_;
 };
 #else // !CBI_CHECKPOINTS
