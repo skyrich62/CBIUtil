@@ -29,8 +29,6 @@
 
 #include <functional>
 #include <list>
-#include <mutex>
-#include <condition_variable>
 
 namespace CompuBrite
 {
