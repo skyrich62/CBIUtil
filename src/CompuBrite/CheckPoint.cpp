@@ -31,7 +31,7 @@ namespace CompuBrite {
 bool CheckPoint::init_{false};
 bool CheckPoint::all_{false};
 bool CheckPoint::disabled_{false};
-std::set<std::string> CheckPoint::categories_;
+std::unordered_set<std::string> CheckPoint::categories_;
 std::function<void()> CheckPoint::trap_ = [] {};
 
 CheckPoint::CheckPoint(std::string &&category, std::ostream& out) :
@@ -51,7 +51,7 @@ CheckPoint::active(const std::string &category)
     if (!init_) {
         init();
     }
-    return categories_.find(category) != categories_.end();
+    return all_ || categories_.find(category) != categories_.end();
 }
 
 void
@@ -60,7 +60,7 @@ CheckPoint::enable(const char *category)
     if (!category) {
         return;
     }
-    categories_.emplace(category);
+    categories_.insert(category);
 }
 
 void

@@ -27,7 +27,7 @@
 #ifndef COMPUBRITE_CHECKPOINT_H
 #define COMPUBRITE_CHECKPOINT_H
 
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <ostream>
 #include <iostream>
@@ -55,16 +55,16 @@ public:
     /// @param line The current source code line number
     /// @param file The current source code filename
     /// @param func The name of the currently running function.
-    Here(unsigned int line, const char* file, const char *func):
-        line_(line),
+    Here(size_t line, const char* file, const char *func):
         file_(file),
-        func_(func)
+        func_(func),
+        line_(line)
     { }
     ~Here() = default;
 private:
-    const unsigned int line_;
     const char * const file_;
     const char * const func_;
+    const size_t       line_;
 };
 
 /// @brief Checkpoints are used to print out debugging or exception
@@ -144,6 +144,7 @@ public:
     ///     default:
     ///         CheckPoint::hit(CBI_HERE, "Shouldn't have gotten here, c= ", c);
     ///         break;
+    //      }
     /// @endcode
     /// @see print()
     /// @note
@@ -288,7 +289,7 @@ private:
     static bool init_;
     static bool all_;
     static bool disabled_;
-    static std::set<std::string> categories_;
+    static std::unordered_set<std::string> categories_;
     static std::function<void()> trap_;
 };
 #else // !CBI_CHECKPOINTS
