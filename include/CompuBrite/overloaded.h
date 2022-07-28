@@ -23,8 +23,8 @@
  * Rich Newman
  */
 
-#ifndef OVERLOAD_H_INCLUDED
-#define OVERLOAD_H_INCLUDED
+#ifndef COMPUBRITE_OVERLOAD_H_INCLUDED
+#define COMPUBRITE_OVERLOAD_H_INCLUDED
 
 namespace CompuBrite {
 
@@ -36,4 +36,4 @@ template< class... Ts > overloaded(Ts...) -> overloaded<Ts...>;
 
 } // namespace CompuBrite
 
-#endif // OVERLOAD_H_INCLUDED
+#endif // COMPUBRITE_OVERLOAD_H_INCLUDED

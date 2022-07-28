@@ -24,8 +24,8 @@
  * @brief Interface for ThreadPool
 */
 
-#ifndef COMPUBRITE_SFML_THREADPOOL_H
-#define COMPUBRITE_SFML_THREADPOOL_H
+#ifndef COMPUBRITE_THREADPOOL_H_INCLUDED
+#define COMPUBRITE_THREADPOOL_H_INCLUDED
 
 #include <CompuBrite/TaskQueue.h>
 #include <thread>
@@ -115,4 +115,4 @@ ThreadPool&
 operator<<(ThreadPool &pool, TaskQueue::Task task);
 } // namespace CompuBrite
 
-#endif // COMPUBRITE_SFML_THREADPOOL_H
+#endif // COMPUBRITE_THREADPOOL_H_INCLUDED

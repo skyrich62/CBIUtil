@@ -24,8 +24,8 @@
  * @brief Interface for checkpoints.
 */
 
-#ifndef COMPUBRITE_CHECKPOINT_H
-#define COMPUBRITE_CHECKPOINT_H
+#ifndef COMPUBRITE_CHECKPOINT_H_INCLUDED
+#define COMPUBRITE_CHECKPOINT_H_INCLUDED
 
 #include <unordered_set>
 #include <string>
@@ -344,4 +344,4 @@ public:
 
 
 
-#endif // COMPUBRITE_CHECKPOINT_H
+#endif // COMPUBRITE_CHECKPOINT_H_INCLUDED

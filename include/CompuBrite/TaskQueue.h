@@ -24,8 +24,8 @@
  * @brief Interface for TaskQueue
 */
 
-#ifndef COMPUBRITE_SFML_TASKQUEUE_H
-#define COMPUBRITE_SFML_TASKQUEUE_H
+#ifndef COMPUBRITE_TASKQUEUE_H_INCLUDED
+#define COMPUBRITE_TASKQUEUE_H_INCLUDED
 
 #include <functional>
 #include <list>
@@ -68,4 +68,4 @@ TaskQueue&
 operator<<(TaskQueue &queue, TaskQueue::Task task);
 
 } // namespace CompuBrite
-#endif // COMPUBRITE_SFML_TASKQUEUE_H
+#endif // COMPUBRITE_TASKQUEUE_H_INCLUDED
