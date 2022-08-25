@@ -21,35 +21,5 @@
  * SOFTWARE.
  *
  * @file
- * @brief Implementation for TaskQueue
+ * @brief Interface for checkpoints.
 */
-
-#include "CompuBrite/TaskQueue.h"
-
-namespace CompuBrite {
-
-void
-TaskQueue::add(TaskQueue::Task task)
-{
-    _queue.emplace_back(task);
-}
-
-TaskQueue::Task
-TaskQueue::take()
-{
-    if (_queue.empty()) {
-        return Task();
-    }
-    auto ret = _queue.back();
-    _queue.pop_back();
-    return ret;
-}
-
-TaskQueue&
-operator<<(TaskQueue &queue, TaskQueue::Task task)
-{
-    queue.add(task);
-    return queue;
-}
-
-} // namespace CompuBrite
