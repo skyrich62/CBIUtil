@@ -38,6 +38,16 @@ namespace cbi = CompuBrite;
 
 int main()
 {
+    int j = 42;
+
+    // Create an invariant checkpoint to ensure that j remains 42.
+    auto guard = cbi::CheckPoint::ensure(CBI_HERE,
+        [&j]() -> bool { return j == 42; },
+        "j changed to: ", std::ref(j));
+
+    // Use convenience macro for the same purpose as above.
+    CBI_INVARIANT(CBI_HERE, (j == 42), "(macro) j changed to: ", std::ref(j));
+
     // Create a debugging CheckPoint "point1"
     cbi::CheckPoint point1("test1");
 
@@ -126,5 +136,7 @@ int main()
     sleep(3);
     pool.shutdown();
     pool.wait();
+
+    j = 24;   // Violate the invariant.
     return 0;
 }

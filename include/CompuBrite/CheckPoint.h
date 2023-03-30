@@ -35,6 +35,22 @@
 
 namespace CompuBrite {
 
+/// A ScopeGuard holds a functor which will be executed when it is destroyed,
+/// (goes out of scope).
+class ScopeGuard
+{
+public:
+    using FunctionType = std::function<void(void)>;
+
+    /// Construct the ScopeGuard with the functor object.
+    ScopeGuard(FunctionType &&fn) : fn_{std::move(fn)} { }
+
+    /// Destroy the ScopeGuard, execute the functor.
+    ~ScopeGuard()                                      { fn_(); }
+private:
+    FunctionType fn_;
+};
+
 #ifdef CBI_CHECKPOINTS
 
 /// @brief A handy way of helping to describe the current source location.
@@ -201,6 +217,43 @@ public:
         return std::forward<Cond>(cond);
     }
 
+    /// @brief Used as a post-condition to ensure certain values are
+    /// maintained.
+    /// @param here A Here object describing the current source location.
+    /// (this is easily provided at call time by the use of CBI_HERE macro.)
+    /// @param cond a condition to be checked at scope termination.  If
+    /// the condition is false, and exception CheckPoints are enabled, then
+    /// the arguments will be printed after a brief message explaining the
+    /// exception and source location.
+    /// @param args Arguments to be printed if "cond" is false
+    /// @par Example
+    /// You can check if a post condition is false at scope termination
+    /// as follows:
+    /// @code
+    /// {
+    ///     int j = 42;
+    ///     auto var = CheckPoint::ensure(CBI_HERE, j == 42, "J was changed: ", std::ref(j));
+    ///     j = 24;
+    /// }
+    /// @endcode
+    template <typename Cond, typename ...Args>
+    static ScopeGuard ensure(const Here& here,
+                             const Cond &cond,
+                             const Args& ...args)
+    {
+        if (!init) {
+            init();
+        }
+        auto tup = std::make_tuple(args...);
+        auto f = [here, cond, tup]() {
+           if (!disabled_ && !cond()) {
+               out(here, std::cerr, "Invariant not satisfied", tup);
+               trap(here);
+           }
+        };
+        return ScopeGuard(std::move(f));
+    }
+
     /// @brief Used to print a debugging message in an active debug CheckPoint
     /// If this debug CheckPoint is active, then the parameters are all
     /// printed, following a brief message describing the checkpoint
@@ -247,6 +300,7 @@ public:
     ///      }
     /// @endcode
     /// If the "server-hang" CheckPoint is enabled, when execution comes
+    /// to this point, the program will enter an infinite loop.  Now, a
     /// to this point, the program will enter an infinite loop.  Now, a
     /// developer can attach to the running program with a debugger, set some
     /// breakpoints, examine memory, then finally set "hang" to false and
@@ -340,8 +394,31 @@ public:
 };
 #endif // CBI_CHECKPOINTS
 
+
+template<typename ...Args>
+std::ostream &operator<<(std::ostream& os, const std::tuple<Args...> &t)
+{
+    std::apply([&os](auto &&... args) { ((os << args), ...);}, t);
+    return os;
+}
+
 } // namespace CompuBrite
 
+
+/// Concatenate two preprocessor symbols.  This must be broken up into two
+/// macros because of the way the preprocessor works.
+#define CBI_CONCATENATE_IMPL(s1, s2) s1##s2
+#define CBI_CONCATENATE(s1, s2) CBI_CONCATENATE_IMPL(s1, s2)
+
+/// Create an anonymous name using the current source line and the given
+/// symbol.
+#define CBI_ANONYMOUS_VARIABLE(str) CBI_CONCATENATE(str, __LINE__)
+
+/// Create an invariant CheckPoint object by wrapping the condition in
+/// a lambda, and calling CompuBrite::Checkpoint::ensure().
+#define CBI_INVARIANT(here, cond, Args...) \
+    auto CBI_ANONYMOUS_VARIABLE(guard_) = CompuBrite::CheckPoint::ensure(here, \
+    [&]() { return cond; }, Args);
 
 
 #endif // COMPUBRITE_CHECKPOINT_H_INCLUDED
