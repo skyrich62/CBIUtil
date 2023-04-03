@@ -247,7 +247,7 @@ public:
         auto tup = std::make_tuple(args...);
         auto f = [here, cond, tup]() {
            if (!disabled_ && !cond()) {
-               out(here, std::cerr, "Invariant not satisfied", tup);
+               out(here, std::cerr, "Invariant", tup);
                trap(here);
            }
         };
