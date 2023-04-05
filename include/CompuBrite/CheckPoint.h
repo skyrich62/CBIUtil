@@ -326,11 +326,13 @@ private:
     static bool active(const std::string &category);
 
     template <typename ...Args>
-    static void out(const Here &here, std::ostream& out, const std::string &reason, const Args& ...args)
+    static void out(const Here &here,
+                    std::ostream& os,
+                    const std::string &reason, const Args& ...args)
     {
-        out << "@@@ CheckPoint (" << reason << "): " << here << "\n@@@ ";
-        (out << ... << args);
-        out << std::endl;
+        os << "@@@ CheckPoint (" << reason << "): " << here << "\n@@@ ";
+        (os << ... << args);
+        os << std::endl;
     }
 
     static void trap(const Here& here);
