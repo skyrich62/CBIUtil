@@ -218,7 +218,9 @@ public:
     }
 
     /// @brief Used as a post-condition to ensure certain values are
-    /// maintained.
+    /// maintained.  This is also an exception Checkpoint and will be
+    /// controlled by "except-off", "except-fatal", etc.
+    /// @see expect
     /// @param here A Here object describing the current source location.
     /// (this is easily provided at call time by the use of CBI_HERE macro.)
     /// @param cond a condition to be checked at scope termination.  If
@@ -275,7 +277,12 @@ public:
     /// print() differs from hit(), in that print is a non-static member
     /// function, and thus requires an active CheckPoint object to function.
     /// It is typically used for outputting debugging information, rather than
-    /// to signal abnormal or unexpected program execution.
+    /// to signal abnormal or unexpected program execution.  Since hit() is
+    /// an exception CheckPoint, using it may cause the program to abort
+    /// or crash, (as controlled by "except-fatal", or "except-crash".
+    /// However print() is *not* an exception, and therefore will *not*
+    /// cause program termination, nor crash no matter what settings are
+    /// in force for exceptions.
     template <typename ...Args>
     void print(const Here& here, const Args& ...args)
     {
@@ -301,7 +308,6 @@ public:
     /// @endcode
     /// If the "server-hang" CheckPoint is enabled, when execution comes
     /// to this point, the program will enter an infinite loop.  Now, a
-    /// to this point, the program will enter an infinite loop.  Now, a
     /// developer can attach to the running program with a debugger, set some
     /// breakpoints, examine memory, then finally set "hang" to false and
     /// resume execution.  In release mode, (where the CBI_CHECKPOINT macro
@@ -316,7 +322,7 @@ public:
     /// @param category The category to enable.
     static void enable(const char *category);
 
-    /// Programatically disabled a specific category.  Usually this would
+    /// Programatically disable a specific category.  Usually this would
     /// be called from a debugger. Does nothing if the category is already
     /// disabled.
     /// @param category The category to disable.
@@ -419,7 +425,7 @@ std::ostream &operator<<(std::ostream& os, const std::tuple<Args...> &t)
 /// Create an invariant CheckPoint object by wrapping the condition in
 /// a lambda, and calling CompuBrite::Checkpoint::ensure().
 #define CBI_INVARIANT(here, cond, Args...) \
-    auto CBI_ANONYMOUS_VARIABLE(guard_) = CompuBrite::CheckPoint::ensure(here, \
+    auto CBI_ANONYMOUS_VARIABLE(cbi_guard_) = CompuBrite::CheckPoint::ensure(here, \
     [&]() { return cond; }, Args);
 
 
