@@ -25,6 +25,7 @@
 
 #include "CompuBrite/CheckPoint.h"
 #include "CompuBrite/ThreadPool.h"
+#include "CompuBrite/string_record.h"
 
 #include <iomanip>
 #include <iostream>
@@ -36,7 +37,8 @@
 
 namespace cbi = CompuBrite;
 
-int main()
+
+void test_checkpoints()
 {
     int j = 42;
 
@@ -91,6 +93,11 @@ int main()
     // Create a temporary CheckPoint and print it if it's enabled.
     cbi::CheckPoint("test3").print(CBI_HERE, "test3\n");
 
+    j = 24;   // Violate the invariant.
+}
+
+void test_threadpool()
+{
     cbi::ThreadPool pool;
     pool.activate(6);
     const auto sleepDuration = 4u;
@@ -137,6 +144,43 @@ int main()
     pool.shutdown();
     pool.wait();
 
-    j = 24;   // Violate the invariant.
+}
+
+void test_string_record1()
+{
+    std::string hello("hello");
+    std::string world("world");
+
+    auto r1 = cbi::string_record::from_string(hello);
+    auto r2 = cbi::string_record::from_string(world);
+
+    auto r3 = cbi::string_record::from_string(hello);
+    if (r1.index() == r3.index()) {
+        std::cout << "equal strings pass" << std::endl;
+    }
+
+    if (r1.index() == r2.index()) {
+        std::cout << "unequal strings fail." << std::endl;
+    }
+}
+
+void test_string_record2()
+{
+    auto r1 = cbi::string_record::from_string("hello");
+    std::cout << "r1 = " << r1.string() << ", " << r1.index() << std::endl;
+
+    auto r2 = cbi::string_record::from_string("world");
+    std::cout << "r2 = " << r2.string() << ", " << r2.index() << std::endl;
+
+    auto r3 = cbi::string_record::from_string("baz");
+    std::cout << "r3 = " << r3.string() << ", " << r3.index() << std::endl;
+}
+
+int main()
+{
+    test_checkpoints();
+    test_threadpool();
+    test_string_record1();
+    test_string_record2();
     return 0;
 }
