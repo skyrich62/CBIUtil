@@ -59,7 +59,8 @@ public:
 private:
     /// string_record objects should only be created from the static
     /// factory function: from_string()
-    string_record();
+    string_record(const std::string &str);
+
 
 private:
     size_t _index;
@@ -71,6 +72,24 @@ private:
     static Map _map;
 };
 
+bool
+inline operator==(string_record lhs, string_record rhs)
+{
+    return lhs.index() == rhs.index();
+}
+
 } // namespace CompuBrite
 
-#endif // COMPUBRITE_OVERLOAD_H_INCLUDED
+namespace std
+{
+    template<>
+    struct hash<CompuBrite::string_record>
+    {
+        std::size_t operator()(const CompuBrite::string_record &s) const noexcept
+        {
+            return std::hash<size_t>{}(s.index());
+        }
+    };
+}
+
+#endif // COMPUBRITE_STRING_RECORD_H_INCLUDED
