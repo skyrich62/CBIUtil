@@ -27,6 +27,7 @@
 #define COMPUBRITE_STRING_RECORD_H_INCLUDED
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <unordered_map>
 
@@ -52,6 +53,9 @@ public:
     /// the string repository.
     size_t index() const                         { return _index; }
 
+    /// @return a string_view associated with this string_record
+    std::string_view string_view() const         { return _strings[_index]; }
+
     /// @return a const reference to the string associated with this
     /// string_record
     const std::string& string() const            { return _strings[_index]; }
@@ -59,7 +63,7 @@ public:
 private:
     /// string_record objects should only be created from the static
     /// factory function: from_string()
-    string_record(const std::string &str);
+    string_record();
 
 
 private:
