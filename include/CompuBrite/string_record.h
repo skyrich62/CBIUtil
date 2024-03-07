@@ -42,8 +42,8 @@ public:
     string_record(const string_record &) = default;
     string_record& operator=(const string_record &) = default;
 
-    string_record(string_record &&) = delete;
-    string_record& operator=(string_record &&) = delete;
+    string_record(string_record &&) = default;
+    string_record& operator=(string_record &&) = default;
 
     /// @return a string_record from the given string.  If there is no record
     /// of that string, create a new string_record and return that.
