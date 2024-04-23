@@ -392,6 +392,12 @@ public:
         return std::forward<Cond>(cond);
     }
 
+    template <typename Cond, typename ...Args>
+    static Cond ensure(const Here& here, Cond &&cond, const Args& ...args)
+    {
+        return std::forward<Cond>(cond);
+    }
+
     static void enable(const char *)
     {
     }

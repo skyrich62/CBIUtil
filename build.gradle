@@ -1,0 +1,102 @@
+plugins {
+    id 'cpp'
+    id 'c'
+    id 'google-test'
+}
+
+model {
+    platforms {
+        linux_x86_64 {
+            architecture "x86_64"
+            operatingSystem "linux"
+        }
+    }
+    buildTypes {
+        debug
+        if (project.hasProperty("full")) {
+            release
+        }
+    }
+    toolChains {
+        gcc(Gcc) {
+            target("linux_x86_64") {
+                cppCompiler.executable = "g++"
+                cCompiler.executable = "gcc"
+                linker.executable = "g++"
+                staticLibArchiver.executable = "/usr/bin/ar"
+                cppCompiler.withArguments { args ->
+                    args << "-std=c++17"
+                    args << "-fPIC"
+                }
+                linker.withArguments { args ->
+                    args << "-pthread"
+                }
+            }
+        }
+    }
+    repositories {
+        libs(PrebuiltLibraries) {
+            googleTest {
+                binaries.withType(StaticLibraryBinary) {
+                    headers.srcDir '/usr/local/googleTest/include'
+                    staticLibraryFile = file("/usr/local/googleTest/lib/libgtest.a")
+                }
+            }
+            googleTestMain {
+                binaries.withType(StaticLibraryBinary) {
+                    headers.srcDir '/usr/local/googleTest/include'
+                    staticLibraryFile = file("/usr/local/googleTest/lib/libgtest_main.a")
+                }
+            }
+        }
+    }
+    binaries {
+      all {
+        if (buildType == buildTypes.debug) {
+          cppCompiler.define "CBI_CHECKPOINTS=1"
+          cCompiler.define "CBI_CHECKPOINTS=1"
+          cppCompiler.args "-Wno-deprecated-declarations", "-g", "-O0", "-Werror=return-type"
+          linker.args "-g"
+        } else {
+          cppCompiler.args "-Wno-deprecated-declarations", "-O2", "-Werror=return-type"
+        }
+      }
+    }
+    components {
+        CBIUtil(NativeLibrarySpec) {
+            targetPlatform "linux_x86_64"
+            sources {
+                cpp {
+                    lib library: "CBIUtil", linkage: "static"
+                    source {
+                        srcDir 'src/CompuBrite'
+                        include "*.cc"
+                        include "*.cpp"
+                    }
+                    exportedHeaders {
+                        srcDirs 'include'
+                    }
+                }
+            }
+        }
+    }
+    testSuites {
+        CBIUtilTest {
+            sources {
+                cpp {
+                    lib library: "googleTest", linkage: "static"
+                    lib library: "CBIUtil", linkage: "static"
+                    source {
+                        srcDir "test"
+                        include "*.cc"
+                        include "*.cpp"
+                    }
+                    binaries.all {
+                        cppCompiler.define "GOOGLE_TEST"
+                        cCompiler.define "GOOGLE_TEST"
+                    }
+                }
+            }
+        }
+    }
+}
