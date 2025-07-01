@@ -10,6 +10,10 @@ model {
             architecture "x86_64"
             operatingSystem "linux"
         }
+        cygwin_x86_64 {
+            architecture "x86_64"
+            operatingSystem "windows"
+        }
     }
     buildTypes {
         debug
@@ -20,13 +24,12 @@ model {
     toolChains {
         gcc(Gcc) {
             target("linux_x86_64") {
-                cppCompiler.executable = "g++"
-                cCompiler.executable = "gcc"
-                linker.executable = "g++"
+                cppCompiler.executable = "${gcc_toolchain}/bin/g++"
+                cCompiler.executable = "${gcc_toolchain}/bin/gcc"
+                linker.executable = "${gcc_toolchain}/bin/g++"
                 staticLibArchiver.executable = "/usr/bin/ar"
                 cppCompiler.withArguments { args ->
                     args << "-std=c++17"
-                    args << "-fPIC"
                 }
                 linker.withArguments { args ->
                     args << "-pthread"

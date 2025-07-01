@@ -35,6 +35,14 @@
 
 namespace CompuBrite {
 
+/// An operator to write std::tuple to an ostream.
+template<typename ...Args>
+std::ostream &operator<<(std::ostream& os, const std::tuple<Args...> &t)
+{
+    std::apply([&os](auto &&... args) { ((os << args), ...);}, t);
+    return os;
+}
+
 /// A ScopeGuard holds a functor which will be executed when it is destroyed,
 /// (goes out of scope).
 class ScopeGuard
@@ -407,14 +415,6 @@ public:
     }
 };
 #endif // CBI_CHECKPOINTS
-
-
-template<typename ...Args>
-std::ostream &operator<<(std::ostream& os, const std::tuple<Args...> &t)
-{
-    std::apply([&os](auto &&... args) { ((os << args), ...);}, t);
-    return os;
-}
 
 } // namespace CompuBrite
 
