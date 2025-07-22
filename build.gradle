@@ -54,16 +54,30 @@ model {
         }
     }
     binaries {
-      all {
-        if (buildType == buildTypes.debug) {
-          cppCompiler.define "CBI_CHECKPOINTS=1"
-          cCompiler.define "CBI_CHECKPOINTS=1"
-          cppCompiler.args "-Wno-deprecated-declarations", "-g", "-O0", "-Werror=return-type"
-          linker.args "-g"
-        } else {
-          cppCompiler.args "-Wno-deprecated-declarations", "-O2", "-Werror=return-type"
+        all {
+            if (buildType == buildTypes.debug) {
+                cppCompiler.define "CBI_CHECKPOINTS=1"
+                cCompiler.define "CBI_CHECKPOINTS=1"
+                cppCompiler.args "-Wno-deprecated-declarations", "-g", "-O0", "-Werror=return-type"
+                linker.args "-g"
+            } else {
+                cppCompiler.args "-Wno-deprecated-declarations", "-O2", "-Werror=return-type"
+            }
         }
-      }
+        withType(SharedLibraryBinary) { 
+            if (buildType == buildTypes.debug) {
+                sharedLibraryFile = file("${project.buildDir}/libs/libCBIUtil-d.so")
+            } else {
+                sharedLibraryFile = file("${project.buildDir}/libs/libCBIUtil.so")
+            }
+        }
+        withType(StaticLibraryBinary) {
+            if (buildType == buildTypes.debug) {
+                staticLibraryFile = file("${project.buildDir}/libs/libCBIUtil-d.a")
+            } else {
+                staticLibraryFile = file("${project.buildDir}/libs/libCBIUtil.a")
+            }
+        }
     }
     components {
         CBIUtil(NativeLibrarySpec) {
