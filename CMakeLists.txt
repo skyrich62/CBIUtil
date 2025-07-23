@@ -4,6 +4,9 @@ project(CBIUtil VERSION 1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Enable position independent code
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Set output directories to consolidate builds
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -53,11 +56,11 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(CBIUtil_static PUBLIC CBI_CHECKPOINTS=1)
     target_compile_definitions(CBIUtil_shared PUBLIC CBI_CHECKPOINTS=1)
-    target_compile_options(CBIUtil_static PUBLIC -g -O0 -Werror=return-type -Wno-deprecated-declarations)
-    target_compile_options(CBIUtil_shared PUBLIC -g -O0 -Werror=return-type -Wno-deprecated-declarations)
+    target_compile_options(CBIUtil_static PUBLIC -g -O0 -Werror=return-type -Wno-deprecated-declarations -fPIC)
+    target_compile_options(CBIUtil_shared PUBLIC -g -O0 -Werror=return-type -Wno-deprecated-declarations -fPIC)
 else()
-    target_compile_options(CBIUtil_static PUBLIC -O2 -Werror=return-type -Wno-deprecated-declarations)
-    target_compile_options(CBIUtil_shared PUBLIC -O2 -Werror=return-type -Wno-deprecated-declarations)
+    target_compile_options(CBIUtil_static PUBLIC -O2 -Werror=return-type -Wno-deprecated-declarations -fPIC)
+    target_compile_options(CBIUtil_shared PUBLIC -O2 -Werror=return-type -Wno-deprecated-declarations -fPIC)
 endif()
 
 # Installation configuration

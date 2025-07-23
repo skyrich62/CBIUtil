@@ -30,6 +30,7 @@ model {
                 staticLibArchiver.executable = "/usr/bin/ar"
                 cppCompiler.withArguments { args ->
                     args << "-std=c++17"
+                    args << "-fPIC"
                 }
                 linker.withArguments { args ->
                     args << "-pthread"
@@ -58,13 +59,13 @@ model {
             if (buildType == buildTypes.debug) {
                 cppCompiler.define "CBI_CHECKPOINTS=1"
                 cCompiler.define "CBI_CHECKPOINTS=1"
-                cppCompiler.args "-Wno-deprecated-declarations", "-g", "-O0", "-Werror=return-type"
+                cppCompiler.args "-Wno-deprecated-declarations", "-g", "-O0", "-Werror=return-type", "-fPIC"
                 linker.args "-g"
             } else {
-                cppCompiler.args "-Wno-deprecated-declarations", "-O2", "-Werror=return-type"
+                cppCompiler.args "-Wno-deprecated-declarations", "-O2", "-Werror=return-type", "-fPIC"
             }
         }
-        withType(SharedLibraryBinary) { 
+        withType(SharedLibraryBinary) {
             if (buildType == buildTypes.debug) {
                 sharedLibraryFile = file("${project.buildDir}/libs/libCBIUtil-d.so")
             } else {
@@ -121,20 +122,20 @@ model {
 // Custom installDist task
 task installDist {
     dependsOn assemble
-    
+
     doLast {
         // Get prefix from gradle.properties
         def installPrefix = project.hasProperty('prefix') ? project.property('prefix') : '/usr/local'
-        
+
         println "Installing to prefix: ${installPrefix}"
-        
+
         // Create directories
         def includeDir = file("${installPrefix}/include")
         def libDir = file("${installPrefix}/lib64")
-        
+
         includeDir.mkdirs()
         libDir.mkdirs()
-        
+
         // Copy header files
         copy {
             from 'include'
@@ -143,14 +144,14 @@ task installDist {
             include '**/*.hpp'
         }
         println "Installed headers to: ${includeDir}"
-        
+
         // Install libraries by finding the built artifacts and renaming them properly
         def buildLibsDir = file("${project.buildDir}/libs/cBIUtil")
-        
+
         // Install static libraries
         def debugStaticLib = file("${buildLibsDir}/static/debug/libCBIUtil.a")
         def releaseStaticLib = file("${buildLibsDir}/static/release/libCBIUtil.a")
-        
+
         if (debugStaticLib.exists()) {
             copy {
                 from debugStaticLib
@@ -159,7 +160,7 @@ task installDist {
             }
             println "Installed: ${libDir}/libCBIUtil-d.a"
         }
-        
+
         if (releaseStaticLib.exists()) {
             copy {
                 from releaseStaticLib
@@ -168,11 +169,11 @@ task installDist {
             }
             println "Installed: ${libDir}/libCBIUtil.a"
         }
-        
+
         // Install shared libraries
         def debugSharedLib = file("${buildLibsDir}/shared/debug/libCBIUtil.so")
         def releaseSharedLib = file("${buildLibsDir}/shared/release/libCBIUtil.so")
-        
+
         if (debugSharedLib.exists()) {
             copy {
                 from debugSharedLib
@@ -181,7 +182,7 @@ task installDist {
             }
             println "Installed: ${libDir}/libCBIUtil-d.so"
         }
-        
+
         if (releaseSharedLib.exists()) {
             copy {
                 from releaseSharedLib
@@ -190,7 +191,7 @@ task installDist {
             }
             println "Installed: ${libDir}/libCBIUtil.so"
         }
-        
+
         println "Installation completed to ${installPrefix}"
         println "Note: Installation to system directories may require elevated permissions"
     }
