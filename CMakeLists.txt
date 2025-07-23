@@ -59,3 +59,13 @@ else()
     target_compile_options(CBIUtil_static PUBLIC -O2 -Werror=return-type -Wno-deprecated-declarations)
     target_compile_options(CBIUtil_shared PUBLIC -O2 -Werror=return-type -Wno-deprecated-declarations)
 endif()
+
+# Installation configuration
+# Install header files
+install(DIRECTORY include/ DESTINATION include)
+
+# Install libraries - CMake will use the OUTPUT_NAME property automatically
+install(TARGETS CBIUtil_static CBIUtil_shared 
+        ARCHIVE DESTINATION lib64
+        LIBRARY DESTINATION lib64
+        RUNTIME DESTINATION lib64)

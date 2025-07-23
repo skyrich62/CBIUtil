@@ -117,3 +117,85 @@ model {
         }
     }
 }
+
+// Custom installDist task
+task installDist {
+    dependsOn assemble
+    
+    doLast {
+        // Get prefix from gradle.properties
+        def installPrefix = project.hasProperty('prefix') ? project.property('prefix') : '/usr/local'
+        
+        println "Installing to prefix: ${installPrefix}"
+        
+        // Create directories
+        def includeDir = file("${installPrefix}/include")
+        def libDir = file("${installPrefix}/lib64")
+        
+        includeDir.mkdirs()
+        libDir.mkdirs()
+        
+        // Copy header files
+        copy {
+            from 'include'
+            into includeDir
+            include '**/*.h'
+            include '**/*.hpp'
+        }
+        println "Installed headers to: ${includeDir}"
+        
+        // Install libraries by finding the built artifacts and renaming them properly
+        def buildLibsDir = file("${project.buildDir}/libs/cBIUtil")
+        
+        // Install static libraries
+        def debugStaticLib = file("${buildLibsDir}/static/debug/libCBIUtil.a")
+        def releaseStaticLib = file("${buildLibsDir}/static/release/libCBIUtil.a")
+        
+        if (debugStaticLib.exists()) {
+            copy {
+                from debugStaticLib
+                into libDir
+                rename { "libCBIUtil-d.a" }
+            }
+            println "Installed: ${libDir}/libCBIUtil-d.a"
+        }
+        
+        if (releaseStaticLib.exists()) {
+            copy {
+                from releaseStaticLib
+                into libDir
+                rename { "libCBIUtil.a" }
+            }
+            println "Installed: ${libDir}/libCBIUtil.a"
+        }
+        
+        // Install shared libraries
+        def debugSharedLib = file("${buildLibsDir}/shared/debug/libCBIUtil.so")
+        def releaseSharedLib = file("${buildLibsDir}/shared/release/libCBIUtil.so")
+        
+        if (debugSharedLib.exists()) {
+            copy {
+                from debugSharedLib
+                into libDir
+                rename { "libCBIUtil-d.so" }
+            }
+            println "Installed: ${libDir}/libCBIUtil-d.so"
+        }
+        
+        if (releaseSharedLib.exists()) {
+            copy {
+                from releaseSharedLib
+                into libDir
+                rename { "libCBIUtil.so" }
+            }
+            println "Installed: ${libDir}/libCBIUtil.so"
+        }
+        
+        println "Installation completed to ${installPrefix}"
+        println "Note: Installation to system directories may require elevated permissions"
+    }
+}
+
+// Add description for the task
+installDist.description = 'Install headers and libraries with correct naming to specified prefix'
+installDist.group = 'distribution'
