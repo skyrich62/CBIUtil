@@ -6,3 +6,4 @@ bin
 doc
 .gradle
 build
+gradle.properties
