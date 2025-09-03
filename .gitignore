@@ -6,4 +6,7 @@ bin
 doc
 .gradle
 build
+cmake_build.sh
 gradle.properties
+cmake-build-debug/
+cmake-build-release/
