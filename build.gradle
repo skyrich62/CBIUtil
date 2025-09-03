@@ -103,6 +103,7 @@ model {
             sources {
                 cpp {
                     lib library: "googleTest", linkage: "static"
+                    lib library: "googleTestMain", linkage: "static"
                     lib library: "CBIUtil", linkage: "static"
                     source {
                         srcDir "test"

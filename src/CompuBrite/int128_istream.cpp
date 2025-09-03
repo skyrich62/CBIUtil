@@ -2,8 +2,6 @@
 #include <cctype>
 #include <ios>
 
-namespace CompuBrite {
-
 // Helper function to skip whitespace and get first non-whitespace character
 static bool skip_whitespace_and_get(std::istream& is, char& c) {
     while (is.get(c) && std::isspace(c)) {
@@ -201,5 +199,3 @@ std::istream& operator>>(std::istream& is, unsigned __int128& value) {
     finalize_stream(is);
     return is;
 }
-
-} // namespace CompuBrite

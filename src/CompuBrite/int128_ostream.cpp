@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <ios>
 
-namespace CompuBrite {
-
 // Helper function to convert unsigned int128 to string in specified base
 static std::string to_string_base(unsigned __int128 value, int base, bool uppercase = false) {
     if (value == 0) {
@@ -200,5 +198,3 @@ std::ostream& operator<<(std::ostream& os, unsigned __int128 value) {
 
     return apply_formatting(os, result);
 }
-
-} // namespace CompuBrite
