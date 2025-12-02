@@ -27,16 +27,16 @@
 #ifndef COMPUBRITE_INTERNAL_STACK_H_INCLUDED
 #define COMPUBRITE_INTERNAL_STACK_H_INCLUDED
 
-#include <memory>
 #include "CompuBrite/CheckPoint.h"
 
 namespace CompuBrite {
 
-/// Manage a stack of elements which is actually kept on the program stack.
+/// Manage a stack of non-owning pointers which is actually kept on the
+/// program stack.
 ///
 /// This is a template utility type intended for single-threaded, strictly
 /// nested (LIFO) usage. Each instance represents a stack "frame" which:
-///  - constructs a T instance via T::create()
+///  - holds a raw T* that is owned elsewhere
 ///  - links itself into a per-T static singly-linked list headed by top()
 ///  - automatically restores the previous top() on destruction.
 ///
@@ -52,17 +52,11 @@ public:
 
   /// Construct a new stack frame for T and push it on the per-T stack.
   ///
-  /// Requirements:
-  ///  - T provides a static std::unique_ptr<T> create() factory.
-  ///
-  /// Effects:
-  ///  - calls T::create() and stores the result in _item
-  ///  - caches the raw pointer in _raw
-  ///  - links this frame above the previous top() via _prev and _top.
-  internal_stack()
+  /// @param ptr A non-owning pointer to an object whose lifetime must
+  ///            exceed that of this frame.
+  internal_stack(pointer ptr)
+    : _ptr(ptr)
   {
-    _item = T::create();
-    _raw  = _item.get();
     _prev = _top;
     _top  = this;
   }
@@ -99,18 +93,11 @@ public:
   static void  operator delete[](void*, std::size_t) = delete;
   /// @}
 
-  /// Return the raw pointer to the managed T instance in this frame.
+  /// Return the raw pointer stored in this frame.
   ///
-  /// The returned pointer is non-owning. It becomes invalid if move()
-  /// is called and the moved-to owner destroys the object.
-  pointer get() const { return _raw; }
-
-  /// Transfer ownership of the managed T instance out of this frame.
-  ///
-  /// After this call, _item is empty. The raw pointer returned by get()
-  /// may become dangling if the new owner destroys the object before
-  /// this frame is destroyed.
-  std::unique_ptr<T> move() { return std::move(_item); }
+  /// The returned pointer is non-owning and must not be deleted via this
+  /// class. It becomes invalid if the underlying object is destroyed.
+  pointer get() const { return _ptr; }
 
   /// Return the previous frame in the per-T stack, or nullptr if this
   /// is the bottom-most frame.
@@ -126,11 +113,8 @@ private:
   /// Link to the previous frame in the per-T stack, or nullptr at bottom.
   Self* _prev{nullptr};
 
-  /// Owning storage for the T instance created in the constructor.
-  std::unique_ptr<T> _item;
-
-  /// Cached raw pointer to the managed T instance for fast access.
-  pointer _raw{};
+  /// Non-owning pointer to the managed T instance.
+  pointer _ptr{nullptr};
 
   /// Per-T top-of-stack pointer for the chain of active frames.
   static Self* _top;
